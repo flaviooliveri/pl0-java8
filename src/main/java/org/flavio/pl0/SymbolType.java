@@ -34,7 +34,7 @@ public enum SymbolType {
         this.regex = false;
     }
 
-    boolean match(String token) {
+    public boolean match(String token) {
         return (regex && token.matches(pattern)) || token.equalsIgnoreCase(pattern);
     }
 
@@ -42,6 +42,11 @@ public enum SymbolType {
         return precedence;
     }
 
+    public boolean isRegex() {
+        return regex;
+    }
 
-
+    public String getPattern() {
+        return pattern;
+    }
 }
