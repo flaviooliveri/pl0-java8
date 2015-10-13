@@ -16,6 +16,7 @@ public class Parser {
 
     private final Set<SymbolType> plusMinus = new HashSet<>();
     private final Set<SymbolType> multiplyDivide = new HashSet<>();
+    private final Set<SymbolType> booleanOperators = new HashSet<>();
 
     public Parser (Scanner scanner){
         this.scanner = scanner;
@@ -23,6 +24,12 @@ public class Parser {
         plusMinus.add(MINUS);
         multiplyDivide.add(SLASH);
         multiplyDivide.add(TIMES);
+        booleanOperators.add(EQ);
+        booleanOperators.add(NE);
+        booleanOperators.add(LT);
+        booleanOperators.add(GT);
+        booleanOperators.add(LE);
+        booleanOperators.add(GE);
     }
 
     private boolean accept(SymbolType symbolType){
@@ -38,6 +45,15 @@ public class Parser {
             scanner.next();
             return true;
         }
+        return false;
+    }
+
+    private boolean expect(Collection<SymbolType> symbols) {
+        if (accept(symbols)) {
+            return true;
+        }
+        error = true;
+        log.error("Unexpected token:{} @ line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), symbols);
         return false;
     }
 
@@ -73,6 +89,7 @@ public class Parser {
     }
 
     private void preposition() {
+        log.debug("PREPOSITION");
         if (accept(IDENTIFIER)) {
             log.debug("ASSIGN");
             expect(ASSIGN);
@@ -80,6 +97,34 @@ public class Parser {
         }
         if (accept(CALL)) {
             expect(IDENTIFIER);
+        }
+        if(accept(BEGIN)) {
+           log.debug("BEGIN");
+           preposition();
+           while (accept(SEMICOLON)) {
+               preposition();
+           }
+           expect(END);
+        }
+        if(accept(IF)) {
+            condition();
+            expect(THEN);
+            preposition();
+        }
+        if(accept(WHILE)) {
+            condition();
+            expect(DO);
+            preposition();
+        }
+    }
+
+    private void condition() {
+        if(accept(ODD)) {
+            expression();
+        } else {
+            expression();
+            expect(booleanOperators);
+            expression();
         }
     }
 
