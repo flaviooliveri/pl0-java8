@@ -18,6 +18,9 @@ public class Parser {
     private final Set<SymbolType> multiplyDivide = new HashSet<>();
     private final Set<SymbolType> booleanOperators = new HashSet<>();
 
+    private final IDTable idTable = new IDTable();
+
+
     public Parser (Scanner scanner){
         this.scanner = scanner;
         plusMinus.add(PLUS);
@@ -70,20 +73,22 @@ public class Parser {
     public void scan() {
         log.debug("PROGRAM");
         scanner.next();
-        block();
+        block(0);
         expect(PERIOD);
     }
 
-    private void block() {
+    private void block(int base) {
+        BaseAndOffset baseAndOffset = new BaseAndOffset(base, 0);
+
         log.debug("BLOCK");
         if (accept(CONST)) {
-            cons();
+            cons(baseAndOffset);
         }
         if (accept(VAR)) {
-            var();
+            var(baseAndOffset);
         }
         while(accept (PROCEDURE)) {
-            procedure();
+            procedure(baseAndOffset);
         }
         preposition();
     }
@@ -162,29 +167,41 @@ public class Parser {
         log.error("Unexpected token:{} @ line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), "expresion");
     }
 
-    private void procedure() {
+    private void procedure(BaseAndOffset baseAndOffset) {
         log.debug("PROCEDURE");
+        ID id = new ID();
+        id.setType(IDType.PROCEDURE);
+        id.setName(scanner.getSymbol().getValue());
         expect(IDENTIFIER);
         expect(SEMICOLON);
-        block();
+        idTable.addId(id, baseAndOffset);
+        block(baseAndOffset.getBasePlusOffset());
         expect(SEMICOLON);
     }
 
-    private void cons() {
+    private void cons(BaseAndOffset baseAndOffset) {
         log.debug("CONST");
         while (true) {
+            ID id = new ID();
+            id.setType(IDType.CONST);
+            id.setName(scanner.getSymbol().getValue());
             expect(IDENTIFIER);
             expect(EQ);
             expect(INTEGER);
+            idTable.addId(id, baseAndOffset);
             if (!accept(COMMA)) break;
         }
         expect(SEMICOLON);
     }
 
-    private void var() {
+    private void var(BaseAndOffset baseAndOffset) {
         log.debug("VAR");
         while (true) {
+            ID id = new ID();
+            id.setType(IDType.VAR);
+            id.setName(scanner.getSymbol().getValue());
             expect(IDENTIFIER);
+            idTable.addId(id, baseAndOffset);
             if (!accept(COMMA)) break;
         }
         expect(SEMICOLON);

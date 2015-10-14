@@ -26,16 +26,6 @@ public class Scanner {
         return tokenizer.lineno();
     }
 
-    public boolean hasNext() {
-        try {
-            tokenizer.nextToken();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        tokenizer.pushBack();
-        return !(tokenizer.ttype == StreamTokenizer.TT_EOF);
-    }
-
     public Symbol next() {
         int token;
         try {
