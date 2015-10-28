@@ -12,7 +12,9 @@ public enum SymbolType {
     CALL("call",2), CONST("const",2), DO("do",2),
     END("end",2), IF("if",2), ODD("odd",2), PROCEDURE("procedure",2),
     THEN("then",2), VAR("var",2), WHILE("while",2), BEGIN("begin",2),
+    READLN("readln", 2), WRITELN("writeln", 2), WRITE("write", 2),
 
+    STRING("(?:^|\\s)'([^']*?)'(?:$|\\s)",3, true),
     IDENTIFIER("[a-zA-Z]*",3, true),
     INTEGER("[0-9]*",3, true),
 

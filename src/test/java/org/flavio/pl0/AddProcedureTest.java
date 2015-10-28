@@ -3,12 +3,14 @@ package org.flavio.pl0;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class AddProcedureTest extends AbstractParserTest  {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSimpleDoubleDeclaration() {
         setUp("PROCEDURE A;;PROCEDURE A;; .");
+        assertTrue(parser.isError());
     }
 
     @Test

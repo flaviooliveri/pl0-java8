@@ -18,7 +18,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER, "a");
+        expected = new Symbol(SymbolType.IDENTIFIER, "A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -46,7 +46,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -66,7 +66,7 @@ public class ScannerTest {
         StringReader reader = new StringReader("A<>B");
         Scanner scanner = new Scanner(reader);
         
-        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -74,7 +74,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"b");
+        expected = new Symbol(SymbolType.IDENTIFIER,"B");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
     }
@@ -85,7 +85,7 @@ public class ScannerTest {
         StringReader reader = new StringReader("A<=B");
         Scanner scanner = new Scanner(reader);
 
-        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -93,7 +93,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"b");
+        expected = new Symbol(SymbolType.IDENTIFIER,"B");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
     }
@@ -104,7 +104,7 @@ public class ScannerTest {
         StringReader reader = new StringReader("A<B");
         Scanner scanner = new Scanner(reader);
 
-        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -112,7 +112,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"b");
+        expected = new Symbol(SymbolType.IDENTIFIER,"B");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
     }
@@ -123,7 +123,7 @@ public class ScannerTest {
         StringReader reader = new StringReader("A>B");
         Scanner scanner = new Scanner(reader);
 
-        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -131,7 +131,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"b");
+        expected = new Symbol(SymbolType.IDENTIFIER,"B");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
     }
@@ -142,7 +142,7 @@ public class ScannerTest {
         StringReader reader = new StringReader("A>=B");
         Scanner scanner = new Scanner(reader);
 
-        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -150,7 +150,7 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"b");
+        expected = new Symbol(SymbolType.IDENTIFIER,"B");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
     }
@@ -161,7 +161,7 @@ public class ScannerTest {
         StringReader reader = new StringReader("A/B");
         Scanner scanner = new Scanner(reader);
 
-        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"a");
+        Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
@@ -169,9 +169,29 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
-        expected = new Symbol(SymbolType.IDENTIFIER,"b");
+        expected = new Symbol(SymbolType.IDENTIFIER,"B");
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
-    }    
+    }
+
+    @Test
+    public void testWrite() {
+
+        StringReader reader = new StringReader("WRITE('STRING')");
+        Scanner scanner = new Scanner(reader);
+
+        Symbol expected = new Symbol(SymbolType.WRITE,"WRITE");
+        scanner.next();
+        assertEquals(expected, scanner.getSymbol());
+
+        expected = new Symbol(SymbolType.LPAREN,"(");
+        scanner.next();
+        assertEquals(expected, scanner.getSymbol());
+
+        expected = new Symbol(SymbolType.STRING,"'STRING'");
+        scanner.next();
+        assertEquals(expected, scanner.getSymbol());
+
+    }
 
 }

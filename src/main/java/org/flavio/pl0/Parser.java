@@ -3,8 +3,10 @@ package org.flavio.pl0;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.MessageFormat;
 import java.util.*;
 
+import static java.text.MessageFormat.format;
 import static org.flavio.pl0.SymbolType.*;
 
 public class Parser {
@@ -20,8 +22,10 @@ public class Parser {
 
     private final IDTable idTable = new IDTable();
 
+    private Symbol last;
 
-    public Parser (Scanner scanner){
+
+    public Parser(Scanner scanner) {
         this.scanner = scanner;
         plusMinus.add(PLUS);
         plusMinus.add(MINUS);
@@ -35,16 +39,18 @@ public class Parser {
         booleanOperators.add(GE);
     }
 
-    private boolean accept(SymbolType symbolType){
-        if (scanner.getSymbol().getType() == symbolType){
+    private boolean accept(SymbolType symbolType) {
+        if (scanner.getSymbol().getType() == symbolType) {
+            last = scanner.getSymbol();
             scanner.next();
             return true;
         }
         return false;
     }
 
-    private boolean accept(Collection<SymbolType> symbolTypes){
-        if (symbolTypes.contains(scanner.getSymbol().getType())){
+    private boolean accept(Collection<SymbolType> symbolTypes) {
+        if (symbolTypes.contains(scanner.getSymbol().getType())) {
+            last = scanner.getSymbol();
             scanner.next();
             return true;
         }
@@ -56,7 +62,7 @@ public class Parser {
             return true;
         }
         error = true;
-        log.error("Unexpected token:{} @ line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), symbols);
+        log.error("Unexpected token:{} at line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), symbols);
         return false;
     }
 
@@ -65,7 +71,7 @@ public class Parser {
             return true;
         }
         error = true;
-        log.error("Unexpected token:{} @ line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), symbolType);
+        log.error("Unexpected token:{} at line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), symbolType);
         return false;
     }
 
@@ -87,84 +93,138 @@ public class Parser {
         if (accept(VAR)) {
             var(baseAndOffset);
         }
-        while(accept (PROCEDURE)) {
+        while (accept(PROCEDURE)) {
             procedure(baseAndOffset);
         }
-        preposition();
+        preposition(baseAndOffset);
     }
 
-    private void preposition() {
+    private void preposition(BaseAndOffset baseAndOffset) {
         log.debug("PREPOSITION");
         if (accept(IDENTIFIER)) {
+            Optional<ID> variable = idTable.findVariable(last.getValue(), baseAndOffset);
+            if (!variable.isPresent()) {
+                error = true;
+                log.error(format("Variable \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+            }
             log.debug("ASSIGN");
             expect(ASSIGN);
-            expression();
+            expression(baseAndOffset);
         }
         if (accept(CALL)) {
+            log.debug("CALL");
             expect(IDENTIFIER);
+            Optional<ID> procedure = idTable.findProcedure(last.getValue(), baseAndOffset);
+            if (!procedure.isPresent()) {
+                error = true;
+                log.error(format("Procedure \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+            }
         }
-        if(accept(BEGIN)) {
-           log.debug("BEGIN");
-           preposition();
-           while (accept(SEMICOLON)) {
-               preposition();
-           }
-           expect(END);
+        if (accept(BEGIN)) {
+            log.debug("BEGIN");
+            preposition(baseAndOffset);
+            while (accept(SEMICOLON)) {
+                preposition(baseAndOffset);
+            }
+            expect(END);
         }
-        if(accept(IF)) {
-            condition();
+        if (accept(IF)) {
+            condition(baseAndOffset);
             expect(THEN);
-            preposition();
+            preposition(baseAndOffset);
         }
-        if(accept(WHILE)) {
-            condition();
+        if (accept(WHILE)) {
+            condition(baseAndOffset);
             expect(DO);
-            preposition();
+            preposition(baseAndOffset);
+        }
+        if (accept(READLN)) {
+            expect(LPAREN);
+            do {
+                expect(IDENTIFIER);
+                Optional<ID> variable = idTable.findVariable(last.getValue(), baseAndOffset);
+                if (!variable.isPresent()) {
+                    error = true;
+                    log.error(format("Variable \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+                }
+            }
+            while (accept(COMMA));
+            expect(RPAREN);
+        }
+
+        if (accept(WRITE)) {
+            expect(LPAREN);
+            do {
+               if (accept(STRING)) {
+
+               } else {
+                   expression(baseAndOffset);
+               }
+            } while (accept(COMMA));
+            expect(RPAREN);
+        }
+
+        if (accept(WRITELN)) {
+            expect(LPAREN);
+            do {
+                if (accept(STRING)) {
+
+                } else {
+                    expression(baseAndOffset);
+                }
+            } while (accept(COMMA));
+            expect(RPAREN);
         }
     }
 
-    private void condition() {
-        if(accept(ODD)) {
-            expression();
+    private void condition(BaseAndOffset baseAndOffset) {
+        if (accept(ODD)) {
+            expression(baseAndOffset);
         } else {
-            expression();
+            expression(baseAndOffset);
             expect(booleanOperators);
-            expression();
+            expression(baseAndOffset);
         }
     }
 
-    private void expression() {
+    private void expression(BaseAndOffset baseAndOffset) {
         log.debug("EXPRESSION");
         accept(plusMinus);
-        term();
-        while(accept(plusMinus)) {
-            term();
+        term(baseAndOffset);
+        while (accept(plusMinus)) {
+            term(baseAndOffset);
         }
     }
 
-    private void term() {
+    private void term(BaseAndOffset baseAndOffset) {
         log.debug("TERM");
-        factor();
+        factor(baseAndOffset);
         while (accept(multiplyDivide)) {
-            factor();
+            factor(baseAndOffset);
         }
     }
 
-    private void factor() {
+    private void factor(BaseAndOffset baseAndOffset) {
         log.debug("FACTOR");
         if (accept(IDENTIFIER)) {
+            Optional var = idTable.findVariable(last.getValue(), baseAndOffset);
+            Optional constant = idTable.findConst(last.getValue(), baseAndOffset);
+            if (!var.isPresent() && !constant.isPresent()) {
+                error = true;
+                log.error(format("\"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+            }
             return;
         }
-        if(accept(INTEGER)) {
+        if (accept(INTEGER)) {
             return;
         }
-        if(accept(LPAREN)) {
-            expression();
+        if (accept(LPAREN)) {
+            expression(baseAndOffset);
             expect(RPAREN);
             return;
         }
         error = true;
-        log.error("Unexpected token:{} @ line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), "expresion");
+        log.error("Unexpected token:{} at line {}. {} expected", scanner.getSymbol().getValue(), scanner.lineNumber(), "expresion");
     }
 
     private void procedure(BaseAndOffset baseAndOffset) {
@@ -174,7 +234,10 @@ public class Parser {
         id.setName(scanner.getSymbol().getValue());
         expect(IDENTIFIER);
         expect(SEMICOLON);
-        idTable.addId(id, baseAndOffset);
+        if (!idTable.addId(id, baseAndOffset)) {
+            error = true;
+            log.error(MessageFormat.format("{0} {1} already declared", id.getType(), id.getName()));
+        }
         block(baseAndOffset.getBasePlusOffset());
         expect(SEMICOLON);
     }
@@ -188,7 +251,10 @@ public class Parser {
             expect(IDENTIFIER);
             expect(EQ);
             expect(INTEGER);
-            idTable.addId(id, baseAndOffset);
+            if (!idTable.addId(id, baseAndOffset)) {
+                error = true;
+                log.error(MessageFormat.format("{0} {1} already declared", id.getType(), id.getName()));
+            }
             if (!accept(COMMA)) break;
         }
         expect(SEMICOLON);
@@ -201,7 +267,10 @@ public class Parser {
             id.setType(IDType.VAR);
             id.setName(scanner.getSymbol().getValue());
             expect(IDENTIFIER);
-            idTable.addId(id, baseAndOffset);
+            if (!idTable.addId(id, baseAndOffset)) {
+                error = true;
+                log.error(MessageFormat.format("{0} already declared", id.getName()));
+            }
             if (!accept(COMMA)) break;
         }
         expect(SEMICOLON);

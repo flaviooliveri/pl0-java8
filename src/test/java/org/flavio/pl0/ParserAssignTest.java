@@ -11,13 +11,13 @@ public class ParserAssignTest extends AbstractParserTest  {
 
     @Test
     public void testSimpleAssign() {
-        setUp("A:=4 .");
+        setUp("VAR A; A:=4 .");
         assertFalse(parser.isError());
     }
 
     @Test
     public void testPlusMinusAssign() {
-        setUp("A:=4+4-3 .");
+        setUp("VAR A; A:=4+4-3 .");
         assertFalse(parser.isError());
     }
 

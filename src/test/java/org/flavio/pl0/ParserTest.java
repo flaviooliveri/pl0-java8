@@ -9,7 +9,7 @@ public class ParserTest extends AbstractParserTest {
 
     @Test
     public void testNotPeriod() {
-        setUp("A");
+        setUp("VAR A; A");
         assertTrue(parser.isError());
     }
 

@@ -12,13 +12,15 @@ public class Scanner {
 
     public Scanner(Reader reader) {
         tokenizer = new StreamTokenizer(reader);
-        tokenizer.lowerCaseMode(true);
+        tokenizer.lowerCaseMode(false);
         char dot = '.';
         char slash = '/';
         char minus = '-';
+        char singleQuoute = '\'';
         tokenizer.ordinaryChar(dot);
         tokenizer.ordinaryChar(slash);
         tokenizer.ordinaryChar(minus);
+        tokenizer.ordinaryChar(singleQuoute);
         evaluator = new TokenEvaluator();
     }
 
@@ -30,27 +32,38 @@ public class Scanner {
         int token;
         try {
             token = tokenizer.nextToken();
+
+            if (token == StreamTokenizer.TT_WORD) {
+                symbol = evaluator.evaluate(tokenizer.sval);
+            } else if (token == StreamTokenizer.TT_NUMBER) {
+                processNumber();
+            } else {
+                String tokenStr = Character.toString((char) token);
+                if (tokenStr.equals("'")) {
+                    String readed;
+                    do {
+                        readed = Character.toString((char) tokenizer.nextToken());
+                        if (!readed.equals("'")) {
+                            tokenStr = tokenStr + tokenizer.sval + " ";
+                        }
+                    } while (!readed.equals("'"));
+                    tokenStr = tokenStr.trim() + readed;
+                }
+                SymbolType symbolType = evaluator.findSymbolType(tokenStr);
+                if (symbolType == SymbolType.COLON) {
+                    processColon();
+                } else if (symbolType == SymbolType.LT) {
+                    processLT();
+                } else if (symbolType == SymbolType.GT) {
+                    processGT();
+                } else {
+                    symbol = evaluator.evaluate(tokenStr);
+                }
+            }
+            return symbol;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (token == StreamTokenizer.TT_WORD) {
-            symbol = evaluator.evaluate(tokenizer.sval);
-        } else if (token == StreamTokenizer.TT_NUMBER) {
-            processNumber();
-        } else {
-            String tokenStr = Character.toString((char) token);
-            SymbolType symbolType = evaluator.findSymbolType(tokenStr);
-            if (symbolType == SymbolType.COLON) {
-                processColon();
-            } else if (symbolType == SymbolType.LT) {
-                processLT();
-            } else if (symbolType == SymbolType.GT) {
-                processGT();
-            } else {
-                symbol = evaluator.evaluate(tokenStr);
-            }
-        }
-        return symbol;
     }
 
     private void processColon() {
@@ -101,7 +114,7 @@ public class Scanner {
     private String getTokenAsString() {
         String tokenStr;
         try {
-            tokenStr =  Character.toString((char) tokenizer.nextToken());
+            tokenStr = Character.toString((char) tokenizer.nextToken());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

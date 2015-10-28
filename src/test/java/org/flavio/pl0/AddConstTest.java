@@ -7,9 +7,10 @@ import static org.junit.Assert.assertTrue;
 
 public class AddConstTest extends AbstractParserTest  {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSimpleDoubleDeclaration() {
         setUp("CONST A=4,A=3; .");
+        assertTrue(parser.isError());
     }
 
     @Test
