@@ -100,7 +100,7 @@ public class Parser {
     }
 
     private void preposition(BaseAndOffset baseAndOffset) {
-        log.debug("PREPOSITION");
+        log.debug("PREPOSITION - " + scanner.lineNumber());
         if (accept(IDENTIFIER)) {
             Optional<ID> variable = idTable.findVariable(last.getValue(), baseAndOffset);
             if (!variable.isPresent()) {
@@ -165,15 +165,16 @@ public class Parser {
         }
 
         if (accept(WRITELN)) {
-            expect(LPAREN);
-            do {
-                if (accept(STRING)) {
+            if (accept(LPAREN)) {
+                do {
+                    if (accept(STRING)) {
 
-                } else {
-                    expression(baseAndOffset);
-                }
-            } while (accept(COMMA));
-            expect(RPAREN);
+                    } else {
+                        expression(baseAndOffset);
+                    }
+                } while (accept(COMMA));
+                expect(RPAREN);
+            }
         }
     }
 

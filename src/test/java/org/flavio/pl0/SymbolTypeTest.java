@@ -70,5 +70,7 @@ public class SymbolTypeTest {
         assertTrue(SymbolType.INTEGER.match("12345"));
         assertFalse(SymbolType.INTEGER.match("12s345"));
         assertFalse(SymbolType.INTEGER.match("12.345"));
+
+        assertTrue(SymbolType.IDENTIFIER.match("K1"));
     }
 }
