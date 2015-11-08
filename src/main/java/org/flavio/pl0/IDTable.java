@@ -26,7 +26,7 @@ public class IDTable {
     private Optional<ID> findId(String name, IDType type, int from, int to) {
         if (to < from)
             return Optional.empty();
-        List<ID> sublist = ids.subList(from, to);
+        List<ID> sublist = new ArrayList<>(ids).subList(from, to);
         Collections.reverse(sublist);
         Predicate<ID> filterByNameAndType = item -> item.getName().equals(name) && item.getType() == type;
         return sublist.stream().filter(filterByNameAndType).findFirst();
@@ -44,4 +44,8 @@ public class IDTable {
         return findId(name, PROCEDURE, 0, baseAndOffset.getBasePlusOffset());
     }
 
+    public void removeScope(BaseAndOffset baseAndOffset) {
+        ids.removeAll(ids.subList(baseAndOffset.getBase(), baseAndOffset.getBasePlusOffset()));
+        System.out.println(ids);
+    }
 }

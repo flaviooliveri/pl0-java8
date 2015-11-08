@@ -33,4 +33,12 @@ public class BaseAndOffset {
     public void increment() {
         offset ++;
     }
+
+    @Override
+    public String toString() {
+        return "BaseAndOffset{" +
+                "base=" + base +
+                ", offset=" + offset +
+                '}';
+    }
 }

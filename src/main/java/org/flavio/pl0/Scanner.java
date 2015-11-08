@@ -20,7 +20,7 @@ public class Scanner {
         tokenizer.ordinaryChar(dot);
         tokenizer.ordinaryChar(slash);
         tokenizer.ordinaryChar(minus);
-        tokenizer.ordinaryChar(singleQuoute);
+        tokenizer.quoteChar(singleQuoute);
         evaluator = new TokenEvaluator();
     }
 
@@ -40,14 +40,7 @@ public class Scanner {
             } else {
                 String tokenStr = Character.toString((char) token);
                 if (tokenStr.equals("'")) {
-                    String readed;
-                    do {
-                        readed = Character.toString((char) tokenizer.nextToken());
-                        if (!readed.equals("'")) {
-                            tokenStr = tokenStr + tokenizer.sval + " ";
-                        }
-                    } while (!readed.equals("'"));
-                    tokenStr = tokenStr.trim() + readed;
+                    tokenStr = tokenStr +  tokenizer.sval + tokenStr;
                 }
                 SymbolType symbolType = evaluator.findSymbolType(tokenStr);
                 if (symbolType == SymbolType.COLON) {
@@ -123,5 +116,10 @@ public class Scanner {
 
     public Symbol getSymbol() {
         return symbol;
+    }
+
+    @Override
+    public String toString() {
+        return symbol.toString() + "@" + tokenizer.lineno();
     }
 }

@@ -1,5 +1,6 @@
-package org.flavio.pl0;
+package org.flavio.pl0.bad;
 
+import org.flavio.pl0.AbstractFileParserTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;

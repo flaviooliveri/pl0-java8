@@ -86,7 +86,7 @@ public class Parser {
     private void block(int base) {
         BaseAndOffset baseAndOffset = new BaseAndOffset(base, 0);
 
-        log.debug("BLOCK");
+        log.debug(scanner.toString());
         if (accept(CONST)) {
             cons(baseAndOffset);
         }
@@ -97,17 +97,18 @@ public class Parser {
             procedure(baseAndOffset);
         }
         preposition(baseAndOffset);
+        idTable.removeScope(baseAndOffset);
     }
 
     private void preposition(BaseAndOffset baseAndOffset) {
-        log.debug("PREPOSITION - " + scanner.lineNumber());
+        log.debug(scanner.toString());
         if (accept(IDENTIFIER)) {
+            log.debug("ASSIGN");
             Optional<ID> variable = idTable.findVariable(last.getValue(), baseAndOffset);
             if (!variable.isPresent()) {
                 error = true;
                 log.error(format("Variable \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
             }
-            log.debug("ASSIGN");
             expect(ASSIGN);
             expression(baseAndOffset);
         }
@@ -139,6 +140,7 @@ public class Parser {
             preposition(baseAndOffset);
         }
         if (accept(READLN)) {
+            log.debug("READLN");
             expect(LPAREN);
             do {
                 expect(IDENTIFIER);
@@ -153,6 +155,7 @@ public class Parser {
         }
 
         if (accept(WRITE)) {
+            log.debug("WRITE");
             expect(LPAREN);
             do {
                if (accept(STRING)) {
@@ -165,6 +168,7 @@ public class Parser {
         }
 
         if (accept(WRITELN)) {
+            log.debug("WRITELN");
             if (accept(LPAREN)) {
                 do {
                     if (accept(STRING)) {
@@ -179,6 +183,7 @@ public class Parser {
     }
 
     private void condition(BaseAndOffset baseAndOffset) {
+        log.debug(scanner.toString());
         if (accept(ODD)) {
             expression(baseAndOffset);
         } else {
@@ -189,7 +194,7 @@ public class Parser {
     }
 
     private void expression(BaseAndOffset baseAndOffset) {
-        log.debug("EXPRESSION");
+        log.debug(scanner.toString());
         accept(plusMinus);
         term(baseAndOffset);
         while (accept(plusMinus)) {
@@ -198,7 +203,7 @@ public class Parser {
     }
 
     private void term(BaseAndOffset baseAndOffset) {
-        log.debug("TERM");
+        log.debug(scanner.toString());
         factor(baseAndOffset);
         while (accept(multiplyDivide)) {
             factor(baseAndOffset);
@@ -206,7 +211,7 @@ public class Parser {
     }
 
     private void factor(BaseAndOffset baseAndOffset) {
-        log.debug("FACTOR");
+        log.debug(scanner.toString());
         if (accept(IDENTIFIER)) {
             Optional var = idTable.findVariable(last.getValue(), baseAndOffset);
             Optional constant = idTable.findConst(last.getValue(), baseAndOffset);
@@ -229,7 +234,7 @@ public class Parser {
     }
 
     private void procedure(BaseAndOffset baseAndOffset) {
-        log.debug("PROCEDURE");
+        log.debug(scanner.toString());
         ID id = new ID();
         id.setType(IDType.PROCEDURE);
         id.setName(scanner.getSymbol().getValue());
@@ -244,7 +249,7 @@ public class Parser {
     }
 
     private void cons(BaseAndOffset baseAndOffset) {
-        log.debug("CONST");
+        log.debug(scanner.toString());
         while (true) {
             ID id = new ID();
             id.setType(IDType.CONST);
@@ -262,7 +267,7 @@ public class Parser {
     }
 
     private void var(BaseAndOffset baseAndOffset) {
-        log.debug("VAR");
+        log.debug(scanner.toString());
         while (true) {
             ID id = new ID();
             id.setType(IDType.VAR);
@@ -280,4 +285,5 @@ public class Parser {
     public boolean isError() {
         return error;
     }
+
 }
