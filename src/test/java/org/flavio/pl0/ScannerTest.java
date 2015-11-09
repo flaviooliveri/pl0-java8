@@ -3,6 +3,7 @@ package org.flavio.pl0;
 import org.junit.Test;
 
 import java.io.StringReader;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -12,7 +13,7 @@ public class ScannerTest {
     public void testAssign() {
 
         StringReader reader = new StringReader("CONST A:=2;");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.CONST, "CONST");
         scanner.next();
@@ -36,11 +37,12 @@ public class ScannerTest {
         
     }
 
+
     @Test
     public void testErrorWithDouble() {
 
         StringReader reader = new StringReader("CONST A=2.4;");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.CONST,"CONST");
         scanner.next();
@@ -64,7 +66,7 @@ public class ScannerTest {
     public void testNotEquals() {
 
         StringReader reader = new StringReader("A<>B");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
         
         Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
@@ -83,7 +85,7 @@ public class ScannerTest {
     public void testLE() {
 
         StringReader reader = new StringReader("A<=B");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
@@ -102,7 +104,7 @@ public class ScannerTest {
     public void testLT() {
 
         StringReader reader = new StringReader("A<B");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
@@ -121,7 +123,7 @@ public class ScannerTest {
     public void testGT() {
 
         StringReader reader = new StringReader("A>B");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
@@ -140,7 +142,7 @@ public class ScannerTest {
     public void testGE() {
 
         StringReader reader = new StringReader("A>=B");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
@@ -159,7 +161,7 @@ public class ScannerTest {
     public void testSlash() {
 
         StringReader reader = new StringReader("A/B");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.IDENTIFIER,"A");
         scanner.next();
@@ -178,7 +180,7 @@ public class ScannerTest {
     public void testWrite() {
 
         StringReader reader = new StringReader("WRITE('STRING')");
-        Scanner scanner = new Scanner(reader);
+        Scanner scanner = getScanner(reader);
 
         Symbol expected = new Symbol(SymbolType.WRITE,"WRITE");
         scanner.next();
@@ -192,6 +194,11 @@ public class ScannerTest {
         scanner.next();
         assertEquals(expected, scanner.getSymbol());
 
+    }
+
+
+    private Scanner getScanner(StringReader reader) {
+        return new Scanner(reader, new TokenEvaluator());
     }
 
 }

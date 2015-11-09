@@ -4,7 +4,7 @@ public class ID {
 
     private String name;
     private IDType type;
-    private Integer value;
+    private Long value = 0l;
 
     public String getName() {
         return name;
@@ -22,11 +22,11 @@ public class ID {
         this.type = type;
     }
 
-    public Integer getValue() {
+    public Long getValue() {
         return value;
     }
 
-    public void setValue(Integer value) {
-        this.value = value;
+    public void setValue(String value) {
+        this.value = Long.valueOf(value);
     }
 }

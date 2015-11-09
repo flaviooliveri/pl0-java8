@@ -18,8 +18,9 @@ public abstract class AbstractFileParserTest {
 
     protected void setUp(String path) {
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(getClass().getResource(path).toURI()))) {
-            Scanner scanner = new Scanner(reader);
-            parser = new Parser(scanner);
+            ApplicationContext applicationContext = new ApplicationContext();
+            applicationContext.initialize(reader);
+            parser = applicationContext.getParser();
             parser.scan();
         } catch (Exception e) {
             throw new RuntimeException(e);

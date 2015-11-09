@@ -10,7 +10,7 @@ public class Scanner {
     private TokenEvaluator evaluator;
     private Symbol symbol;
 
-    public Scanner(Reader reader) {
+    public Scanner(Reader reader, TokenEvaluator evaluator) {
         tokenizer = new StreamTokenizer(reader);
         tokenizer.lowerCaseMode(false);
         char dot = '.';
@@ -21,7 +21,7 @@ public class Scanner {
         tokenizer.ordinaryChar(slash);
         tokenizer.ordinaryChar(minus);
         tokenizer.quoteChar(singleQuoute);
-        evaluator = new TokenEvaluator();
+        this.evaluator = evaluator;
     }
 
     public int lineNumber() {

@@ -13,6 +13,7 @@ import static org.flavio.pl0.IDType.VAR;
 public class IDTable {
 
     private List<ID> ids = new ArrayList<>();
+    private int numberOfVariables = 0;
 
     public boolean addId(ID id, BaseAndOffset baseAndOffset) {
         Optional<ID> found = findId(id.getName(), id.getType(), baseAndOffset.getBase(), baseAndOffset.getOffset());
@@ -20,6 +21,15 @@ public class IDTable {
             return false;
         ids.add(id);
         baseAndOffset.increment();
+        return true;
+    }
+
+    public boolean addVariable(ID id, BaseAndOffset baseAndOffset) {
+        if (!addId(id, baseAndOffset)) {
+            return  false;
+        }
+        id.setValue(""+numberOfVariables * 4);
+        numberOfVariables ++;
         return true;
     }
 
@@ -46,6 +56,5 @@ public class IDTable {
 
     public void removeScope(BaseAndOffset baseAndOffset) {
         ids.removeAll(ids.subList(baseAndOffset.getBase(), baseAndOffset.getBasePlusOffset()));
-        System.out.println(ids);
     }
 }

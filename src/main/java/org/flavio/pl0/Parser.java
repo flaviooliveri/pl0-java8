@@ -1,5 +1,6 @@
 package org.flavio.pl0;
 
+import org.flavio.pl0.generator.CodeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,12 +21,15 @@ public class Parser {
     private final Set<SymbolType> multiplyDivide = new HashSet<>();
     private final Set<SymbolType> booleanOperators = new HashSet<>();
 
-    private final IDTable idTable = new IDTable();
+    private final IDTable idTable;
+    private CodeGenerator generator;
 
     private Symbol last;
 
 
-    public Parser(Scanner scanner) {
+    public Parser(Scanner scanner, IDTable idTable, CodeGenerator codeGenerator) {
+        this.idTable = idTable;
+        this.generator = codeGenerator;
         this.scanner = scanner;
         plusMinus.add(PLUS);
         plusMinus.add(MINUS);
@@ -111,6 +115,10 @@ public class Parser {
             }
             expect(ASSIGN);
             expression(baseAndOffset);
+            if (!error) {
+                generator.popEax();
+                generator.movEdiPlusOffsetEax(variable.get().getValue());
+            }
         }
         if (accept(CALL)) {
             log.debug("CALL");
@@ -119,6 +127,8 @@ public class Parser {
             if (!procedure.isPresent()) {
                 error = true;
                 log.error(format("Procedure \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+            } else {
+                generator.call(procedure.get().getValue() - (generator.getContentSize() + 5));
             }
         }
         if (accept(BEGIN)) {
@@ -131,13 +141,20 @@ public class Parser {
         }
         if (accept(IF)) {
             condition(baseAndOffset);
+            int size = generator.getContentSize();
             expect(THEN);
             preposition(baseAndOffset);
+            generator.fixUp(generator.getContentSize() - size, size - 4);
         }
         if (accept(WHILE)) {
+            int beforeCondition = generator.getContentSize();
             condition(baseAndOffset);
+            int afterCondition = generator.getContentSize();
             expect(DO);
             preposition(baseAndOffset);
+            int atCondition = beforeCondition - (generator.getContentSize() + 5);
+            generator.jmp(atCondition);
+            generator.fixUp(afterCondition - 4, generator.getContentSize() - afterCondition);
         }
         if (accept(READLN)) {
             log.debug("READLN");
@@ -158,11 +175,11 @@ public class Parser {
             log.debug("WRITE");
             expect(LPAREN);
             do {
-               if (accept(STRING)) {
+                if (accept(STRING)) {
 
-               } else {
-                   expression(baseAndOffset);
-               }
+                } else {
+                    expression(baseAndOffset);
+                }
             } while (accept(COMMA));
             expect(RPAREN);
         }
@@ -186,18 +203,67 @@ public class Parser {
         log.debug(scanner.toString());
         if (accept(ODD)) {
             expression(baseAndOffset);
+            generator.popEax();
+            generator.testAl((byte) 0x01);
+            generator.jpo((byte) 0x05);
+            generator.jmp(0);
         } else {
             expression(baseAndOffset);
             expect(booleanOperators);
+            SymbolType operation = last.getType();
             expression(baseAndOffset);
+            generator.popEax();
+            generator.popEbx();
+            generator.cmpEaxEbx();
+            switch (operation) {
+                case EQ:
+                    generator.addByte((byte) 0x74);
+                    break;
+                case NE:
+                    generator.addByte((byte) 0x75);
+                    break;
+                case LT:
+                    generator.addByte((byte) 0x7C);
+                    break;
+                case LE:
+                    generator.addByte((byte) 0x7E);
+                    break;
+                case GT:
+                    generator.addByte((byte) 0x7F);
+                    break;
+                case GE:
+                    generator.addByte((byte) 0x7D);
+            }
+            generator.addByte((byte) 0x05);
+            generator.jmp(0);
         }
     }
 
     private void expression(BaseAndOffset baseAndOffset) {
         log.debug(scanner.toString());
-        accept(plusMinus);
+        boolean minus = false;
+        if(accept(plusMinus)) {
+            minus = (last.getType() == MINUS);
+        }
         term(baseAndOffset);
+        if(minus) {
+            generator.popEax();
+            generator.negEax();
+            generator.pushEax();
+        }
         while (accept(plusMinus)) {
+            if(last.getType() == MINUS) {
+                generator.popEax();
+                generator.popEbx();
+                generator.changeEaxEbx();
+                generator.subEaxEbx();
+                generator.pushEax();
+            } else {
+                generator.popEax();
+                generator.popEbx();
+                generator.addEaxEbx();
+                generator.pushEax();
+            }
             term(baseAndOffset);
         }
     }
@@ -206,6 +272,19 @@ public class Parser {
         log.debug(scanner.toString());
         factor(baseAndOffset);
         while (accept(multiplyDivide)) {
+            if(last.getType() == TIMES) {
+                generator.popEax();
+                generator.popEbx();
+                generator.mulEaxEbx();
+                generator.pushEax();
+            } else {
+                generator.popEax();
+                generator.popEbx();
+                generator.changeEaxEbx();
+                generator.cdq();
+                generator.divEaxEbx();
+                generator.pushEax();
+            }
             factor(baseAndOffset);
         }
     }
@@ -213,15 +292,24 @@ public class Parser {
     private void factor(BaseAndOffset baseAndOffset) {
         log.debug(scanner.toString());
         if (accept(IDENTIFIER)) {
-            Optional var = idTable.findVariable(last.getValue(), baseAndOffset);
-            Optional constant = idTable.findConst(last.getValue(), baseAndOffset);
-            if (!var.isPresent() && !constant.isPresent()) {
-                error = true;
-                log.error(format("\"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+            Optional<ID> var = idTable.findVariable(last.getValue(), baseAndOffset);
+            if (var.isPresent()) {
+                generator.movEaxEdiPlusOffset(var.get().getValue());
+            } else {
+                Optional<ID> constant = idTable.findConst(last.getValue(), baseAndOffset);
+                if (constant.isPresent()) {
+                    generator.movEax(constant.get().getValue());
+                    generator.pushEax();
+                } else {
+                    error = true;
+                    log.error(format("\"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+                }
             }
             return;
         }
         if (accept(INTEGER)) {
+            generator.movEax(last.getValue());
+            generator.pushEax();
             return;
         }
         if (accept(LPAREN)) {
@@ -237,9 +325,10 @@ public class Parser {
         log.debug(scanner.toString());
         ID id = new ID();
         id.setType(IDType.PROCEDURE);
-        id.setName(scanner.getSymbol().getValue());
         expect(IDENTIFIER);
+        id.setName(last.getValue());
         expect(SEMICOLON);
+        id.setValue(""+generator.getContentSize());
         if (!idTable.addId(id, baseAndOffset)) {
             error = true;
             log.error(MessageFormat.format("{0} {1} already declared", id.getType(), id.getName()));
@@ -253,10 +342,13 @@ public class Parser {
         while (true) {
             ID id = new ID();
             id.setType(IDType.CONST);
-            id.setName(scanner.getSymbol().getValue());
             expect(IDENTIFIER);
+            id.setName(last.getValue());
             expect(EQ);
             expect(INTEGER);
+            if (!error) {
+                id.setValue(last.getValue());
+            }
             if (!idTable.addId(id, baseAndOffset)) {
                 error = true;
                 log.error(MessageFormat.format("{0} {1} already declared", id.getType(), id.getName()));
@@ -271,9 +363,9 @@ public class Parser {
         while (true) {
             ID id = new ID();
             id.setType(IDType.VAR);
-            id.setName(scanner.getSymbol().getValue());
             expect(IDENTIFIER);
-            if (!idTable.addId(id, baseAndOffset)) {
+            id.setName(last.getValue());
+            if (!idTable.addVariable(id, baseAndOffset)) {
                 error = true;
                 log.error(MessageFormat.format("{0} already declared", id.getName()));
             }

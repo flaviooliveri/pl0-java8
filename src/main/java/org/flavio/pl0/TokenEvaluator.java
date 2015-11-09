@@ -10,7 +10,7 @@ public class TokenEvaluator {
     private List<SymbolType> symbols;
 
     public TokenEvaluator() {
-        symbols = Arrays.asList(SymbolType.values());
+        this.symbols =  Arrays.asList(SymbolType.values());
     }
 
     public SymbolType findSymbolType(String token) {

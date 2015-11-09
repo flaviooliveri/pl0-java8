@@ -13,8 +13,9 @@ public abstract class AbstractParserTest {
 
     protected void setUp(String source) {
         StringReader reader = new StringReader(source);
-        Scanner scanner = new Scanner(reader);
-        parser = new Parser(scanner);
+        ApplicationContext applicationContext = new ApplicationContext();
+        applicationContext.initialize(reader);
+        parser = applicationContext.getParser();
         parser.scan();
     }
 

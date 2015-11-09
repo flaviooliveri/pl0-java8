@@ -15,7 +15,7 @@ public enum SymbolType {
     READLN("readln", 2), WRITELN("writeln", 2), WRITE("write", 2),
 
     STRING("(?:^|\\s)'([^']*?)'(?:$|\\s)",3, true),
-    IDENTIFIER("[a-zA-Z0-9]*",3, true),
+    IDENTIFIER("^[a-zA-Z][a-zA-Z0-9]*",3, true),
     INTEGER("[0-9]*",3, true),
 
     ERROR(".*",4, true);

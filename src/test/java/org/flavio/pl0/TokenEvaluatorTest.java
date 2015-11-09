@@ -3,6 +3,8 @@ package org.flavio.pl0;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 
@@ -29,7 +31,7 @@ public class TokenEvaluatorTest {
         assertFalse(SymbolType.IDENTIFIER == evaluator.findSymbolType(","));
         assertFalse(SymbolType.IDENTIFIER == evaluator.findSymbolType(":"));
         assertFalse(SymbolType.IDENTIFIER == evaluator.findSymbolType(";"));
-        assertTrue(SymbolType.ERROR == evaluator.findSymbolType("co444"));
+        assertTrue(SymbolType.IDENTIFIER == evaluator.findSymbolType("co444"));
         assertTrue(SymbolType.ERROR == evaluator.findSymbolType("=>"));
         assertTrue(SymbolType.ERROR == evaluator.findSymbolType("44a"));
         assertTrue(SymbolType.ERROR == evaluator.findSymbolType("a$"));
