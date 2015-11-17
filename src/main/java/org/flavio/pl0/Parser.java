@@ -5,7 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashSet;
@@ -98,12 +103,27 @@ public class Parser {
     }
 
     private void generateFile(String pathStr) {
+        Path path = Paths.get(pathStr);
         try (OutputStream writer = new FileOutputStream(pathStr)) {
             for (int i = 0; i < generator.getContent().size(); i++) {
                 writer.write(generator.getContent().get(i));
             }
-        } catch (Exception ex) {
-            System.out.println(ex.toString());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return;
+        }
+        Set<PosixFilePermission> permissions = new HashSet<>();
+        permissions.add(PosixFilePermission.OTHERS_READ);
+        permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+        permissions.add(PosixFilePermission.GROUP_READ);
+        permissions.add(PosixFilePermission.GROUP_EXECUTE);
+        permissions.add(PosixFilePermission.OWNER_WRITE);
+        permissions.add(PosixFilePermission.OWNER_READ);
+        permissions.add(PosixFilePermission.OWNER_EXECUTE);
+        try {
+            Files.setPosixFilePermissions(path, permissions);
+        } catch (IOException e) {
+            log.error(e.getMessage());
         }
     }
 
