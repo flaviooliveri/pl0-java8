@@ -17,10 +17,6 @@ public class CodeGenerator {
         return bytesToHex(getVariable());
     }
 
-    public String getAsHex() {
-        return bytesToHex(content);
-    }
-
     public List<Byte> getVariable() {
         return content.subList(variableIndex, getContentSize());
     }

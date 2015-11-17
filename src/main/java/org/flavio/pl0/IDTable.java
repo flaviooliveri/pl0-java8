@@ -57,10 +57,6 @@ public class IDTable {
         return sublist.stream().filter(filterByNameAndType).findFirst();
     }
 
-    public Optional<ID> findConst(String name, BaseAndOffset baseAndOffset) {
-        return findId(name, CONST, 0, baseAndOffset.getBasePlusOffset());
-    }
-
     public Optional<ID> findProcedure(String name, BaseAndOffset baseAndOffset) {
         return findId(name, PROCEDURE, 0, baseAndOffset.getBasePlusOffset());
     }

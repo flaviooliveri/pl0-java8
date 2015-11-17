@@ -1,0 +1,18 @@
+package org.flavio.pl0.good;
+
+import org.flavio.pl0.AbstractFileParserTest;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+public class BIEN04TEST extends AbstractFileParserTest {
+
+    @Test
+    public void test() {
+        setUp("/BIEN-04.PL0");
+        assertFalse(parser.isError());
+        assertEquals("BF CF 85 04 08 E9 9D 00 00 00 8B 87 00 00 00 00 89 87 0C 00 00 00 8B 87 04 00 00 00 89 87 10 00 00 00 8B 87 0C 00 00 00 50 8B 87 10 00 00 00 5B 39 C3 75 05 E9 61 00 00 00 8B 87 0C 00 00 00 50 8B 87 10 00 00 00 5B 39 C3 7C 05 E9 17 00 00 00 8B 87 10 00 00 00 50 8B 87 0C 00 00 00 5B 93 29 D8 89 87 10 00 00 00 8B 87 10 00 00 00 50 8B 87 0C 00 00 00 5B 39 C3 7C 05 E9 17 00 00 00 8B 87 0C 00 00 00 50 8B 87 10 00 00 00 5B 93 29 D8 89 87 0C 00 00 00 E9 88 FF FF FF 8B 87 0C 00 00 00 89 87 08 00 00 00 C3 B9 3B 85 04 08 BA 03 00 00 00 E8 3A FC FF FF E9 03 00 00 00 58 3A 20 E8 CD FD FF FF 89 87 00 00 00 00 8B 87 00 00 00 00 50 B8 00 00 00 00 5B 39 C3 7F 05 E9 6B 00 00 00 B9 73 85 04 08 BA 03 00 00 00 E8 02 FC FF FF E9 03 00 00 00 59 3A 20 E8 95 FD FF FF 89 87 04 00 00 00 8B 87 04 00 00 00 50 B8 00 00 00 00 5B 39 C3 7F 05 E9 33 00 00 00 E8 EE FE FF FF B9 B0 85 04 08 BA 05 00 00 00 E8 C5 FB FF FF E9 05 00 00 00 4D 43 44 3A 20 8B 87 08 00 00 00 E8 D0 FB FF FF E8 BB FB FF FF E8 B6 FB FF FF E9 31 FD FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", generator.getVariableAsHex());
+    }
+
+}

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,13 +38,25 @@ public class ApplicationContext {
     }
 
     public static void main(String[] args) {
+        if (args.length == 0) {
+            log.error("Usage: pl0c <source file>\n");
+            return;
+        }
         String path = args[0];
+        File f = new File(path);
+        if (!f.exists()) {
+            log.error("file not found: " + path);
+            return;
+        }
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(path))) {
             ApplicationContext applicationContext = new ApplicationContext();
             applicationContext.initialize(reader);
             Parser parser = applicationContext.getParser();
             if (path.toLowerCase().endsWith(".pl0")) {
                 path = path.substring(0, path.length() - 4);
+            } else {
+                log.error("Only files with \".PLO\" extension accepted");
+                return;
             }
             parser.compile(path);
         } catch (Exception e) {
