@@ -27,13 +27,6 @@ public class Symbol {
     }
 
     @Override
-    public int hashCode() {
-        int result = type.hashCode();
-        result = 31 * result + value.hashCode();
-        return result;
-    }
-
-    @Override
     public String toString() {
         return "Symbol{" +
                 "type=" + type +

@@ -4,6 +4,9 @@ import org.flavio.pl0.generator.CodeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -79,16 +82,43 @@ public class Parser {
         return false;
     }
 
+    public void compile(String path) {
+        generator.movEdi((long) 0);
+        program();
+        generator.fixUp(1153, generator.getNumberAt(64) + generator.getContentSize());
+        for (int i = 0; i < idTable.getNumberOfVariables(); i++) {
+            generator.addNumber(0);
+        }
+        generator.fixHeader();
+        if (path != null) {
+            generateFile(path);
+        }
+    }
 
-    public void scan() {
+    private void generateFile(String pathStr) {
+        try (OutputStream writer = new FileOutputStream(pathStr)) {
+            for (int i = 0; i < generator.getContent().size(); i++) {
+                writer.write(generator.getContent().get(i));
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.toString());
+        }
+    }
+
+    public void program() {
         log.debug("PROGRAM");
         scanner.next();
         block(0);
         expect(PERIOD);
+        generator.jmp(generator.distanceTo(0x300));
     }
 
     private void block(int base) {
         BaseAndOffset baseAndOffset = new BaseAndOffset(base, 0);
+
+        generator.jmp(0);
+
+        int beforeDeclarations = generator.getContentSize();
 
         log.debug(scanner.toString());
         if (accept(CONST)) {
@@ -99,7 +129,15 @@ public class Parser {
         }
         while (accept(PROCEDURE)) {
             procedure(baseAndOffset);
+            generator.ret();
         }
+
+        if (generator.getContentSize() - beforeDeclarations == 0) {
+            generator.removeLastJump();
+        } else {
+            generator.fixUp(beforeDeclarations - 4, generator.getContentSize() - beforeDeclarations);
+        }
+
         preposition(baseAndOffset);
         idTable.removeScope(baseAndOffset);
     }
@@ -144,7 +182,7 @@ public class Parser {
             int size = generator.getContentSize();
             expect(THEN);
             preposition(baseAndOffset);
-            generator.fixUp(generator.getContentSize() - size, size - 4);
+            generator.fixUp(size - 4, generator.getContentSize() - size);
         }
         if (accept(WHILE)) {
             int beforeCondition = generator.getContentSize();
@@ -162,7 +200,9 @@ public class Parser {
             do {
                 expect(IDENTIFIER);
                 Optional<ID> variable = idTable.findVariable(last.getValue(), baseAndOffset);
-                if (!variable.isPresent()) {
+                if (variable.isPresent()) {
+                    generator.readln(variable.get().getValue());
+                } else {
                     error = true;
                     log.error(format("Variable \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
                 }
@@ -176,9 +216,11 @@ public class Parser {
             expect(LPAREN);
             do {
                 if (accept(STRING)) {
-
+                    String unquoted = last.getValue().substring(1, last.getValue().length() - 1);
+                    generator.write(unquoted);
                 } else {
                     expression(baseAndOffset);
+                    generator.write();
                 }
             } while (accept(COMMA));
             expect(RPAREN);
@@ -189,13 +231,16 @@ public class Parser {
             if (accept(LPAREN)) {
                 do {
                     if (accept(STRING)) {
-
+                        String unquoted = last.getValue().substring(1, last.getValue().length() - 1);
+                        generator.write(unquoted);
                     } else {
                         expression(baseAndOffset);
+                        generator.write();
                     }
                 } while (accept(COMMA));
                 expect(RPAREN);
             }
+            generator.writeNewLine();
         }
     }
 
@@ -242,17 +287,17 @@ public class Parser {
     private void expression(BaseAndOffset baseAndOffset) {
         log.debug(scanner.toString());
         boolean minus = false;
-        if(accept(plusMinus)) {
+        if (accept(plusMinus)) {
             minus = (last.getType() == MINUS);
         }
         term(baseAndOffset);
-        if(minus) {
+        if (minus) {
             generator.popEax();
             generator.negEax();
             generator.pushEax();
         }
         while (accept(plusMinus)) {
-            if(last.getType() == MINUS) {
+            if (last.getType() == MINUS) {
                 generator.popEax();
                 generator.popEbx();
                 generator.changeEaxEbx();
@@ -272,7 +317,9 @@ public class Parser {
         log.debug(scanner.toString());
         factor(baseAndOffset);
         while (accept(multiplyDivide)) {
-            if(last.getType() == TIMES) {
+            SymbolType operation = last.getType();
+            factor(baseAndOffset);
+            if (operation == TIMES) {
                 generator.popEax();
                 generator.popEbx();
                 generator.mulEaxEbx();
@@ -285,25 +332,24 @@ public class Parser {
                 generator.divEaxEbx();
                 generator.pushEax();
             }
-            factor(baseAndOffset);
         }
     }
 
     private void factor(BaseAndOffset baseAndOffset) {
         log.debug(scanner.toString());
         if (accept(IDENTIFIER)) {
-            Optional<ID> var = idTable.findVariable(last.getValue(), baseAndOffset);
-            if (var.isPresent()) {
-                generator.movEaxEdiPlusOffset(var.get().getValue());
-            } else {
-                Optional<ID> constant = idTable.findConst(last.getValue(), baseAndOffset);
-                if (constant.isPresent()) {
-                    generator.movEax(constant.get().getValue());
-                    generator.pushEax();
+            Optional<ID> variableOrConstantMaybe = idTable.findVariableOrConstant(last.getValue(), baseAndOffset);
+            if (variableOrConstantMaybe.isPresent()) {
+                ID variableOrConstant = variableOrConstantMaybe.get();
+                if (variableOrConstant.getType() == IDType.VAR) {
+                    generator.movEaxEdiPlusOffset(variableOrConstant.getValue());
                 } else {
-                    error = true;
-                    log.error(format("\"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+                    generator.movEax(variableOrConstant.getValue());
                 }
+                generator.pushEax();
+            } else {
+                log.error(format("\"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+                error = true;
             }
             return;
         }
@@ -328,7 +374,7 @@ public class Parser {
         expect(IDENTIFIER);
         id.setName(last.getValue());
         expect(SEMICOLON);
-        id.setValue(""+generator.getContentSize());
+        id.setValue("" + generator.getContentSize());
         if (!idTable.addId(id, baseAndOffset)) {
             error = true;
             log.error(MessageFormat.format("{0} {1} already declared", id.getType(), id.getName()));

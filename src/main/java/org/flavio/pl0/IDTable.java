@@ -46,6 +46,17 @@ public class IDTable {
         return findId(name, VAR, 0, baseAndOffset.getBasePlusOffset());
     }
 
+    public Optional<ID> findVariableOrConstant(String name, BaseAndOffset baseAndOffset) {
+        int from = 0;
+        int to = baseAndOffset.getBasePlusOffset();
+        if (to < from)
+            return Optional.empty();
+        List<ID> sublist = new ArrayList<>(ids).subList(from, to);
+        Collections.reverse(sublist);
+        Predicate<ID> filterByNameAndType = item -> item.getName().equals(name) && (item.getType() == VAR || item.getType() == CONST);
+        return sublist.stream().filter(filterByNameAndType).findFirst();
+    }
+
     public Optional<ID> findConst(String name, BaseAndOffset baseAndOffset) {
         return findId(name, CONST, 0, baseAndOffset.getBasePlusOffset());
     }
@@ -56,5 +67,9 @@ public class IDTable {
 
     public void removeScope(BaseAndOffset baseAndOffset) {
         ids.removeAll(ids.subList(baseAndOffset.getBase(), baseAndOffset.getBasePlusOffset()));
+    }
+
+    public int getNumberOfVariables() {
+        return numberOfVariables;
     }
 }

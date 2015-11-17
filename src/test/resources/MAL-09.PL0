@@ -7,8 +7,8 @@ procedure INICIAR;
   call ASIGNAR;
 
 begin
-  write ('NUM=');
-  readln (Y);
+  readln(A);
+  write ('NUM='); readln (Y);
   call INICIAR;
   writeln ('NUM*2=',Y*X)
 end.

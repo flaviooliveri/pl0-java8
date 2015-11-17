@@ -14,16 +14,8 @@ public class BaseAndOffset {
         return base;
     }
 
-    public void setBase(int base) {
-        this.base = base;
-    }
-
     public int getOffset() {
         return offset;
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset;
     }
 
     public int getBasePlusOffset() {
@@ -34,11 +26,4 @@ public class BaseAndOffset {
         offset ++;
     }
 
-    @Override
-    public String toString() {
-        return "BaseAndOffset{" +
-                "base=" + base +
-                ", offset=" + offset +
-                '}';
-    }
 }
