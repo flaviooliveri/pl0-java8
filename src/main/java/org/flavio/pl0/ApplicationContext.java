@@ -38,7 +38,7 @@ public class ApplicationContext {
     }
 
     public static void main(String[] args) {
-        if (args.length == 0) {
+        if (args == null || args.length == 0) {
             log.error("Usage: pl0c <source file>\n");
             return;
         }
