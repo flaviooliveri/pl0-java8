@@ -4,11 +4,13 @@ import org.flavio.pl0.generator.CodeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import static java.text.MessageFormat.format;
 import static org.flavio.pl0.SymbolType.*;
@@ -297,7 +299,9 @@ public class Parser {
             generator.pushEax();
         }
         while (accept(plusMinus)) {
-            if (last.getType() == MINUS) {
+            minus = (last.getType() == MINUS);
+            term(baseAndOffset);
+            if (minus) {
                 generator.popEax();
                 generator.popEbx();
                 generator.changeEaxEbx();
@@ -309,7 +313,6 @@ public class Parser {
                 generator.addEaxEbx();
                 generator.pushEax();
             }
-            term(baseAndOffset);
         }
     }
 
