@@ -200,7 +200,11 @@ public class Parser {
             expect(END);
         }
         if (accept(IF)) {
+            boolean lparen = accept(LPAREN);
             condition(baseAndOffset);
+            if (lparen) {
+                expect(RPAREN);
+            }
             int size = generator.getContentSize();
             expect(THEN);
             preposition(baseAndOffset);
@@ -215,6 +219,32 @@ public class Parser {
             int atCondition = beforeCondition - (generator.getContentSize() + 5);
             generator.jmp(atCondition);
             generator.fixUp(afterCondition - 4, generator.getContentSize() - afterCondition);
+        }
+        if (accept(REPEAT)) {
+            int beforePreposition = generator.getContentSize();
+            preposition(baseAndOffset);
+            while (accept(SEMICOLON)) {
+                preposition(baseAndOffset);
+            }
+            expect(UNTIL);
+            condition(baseAndOffset);
+            generator.fixUp(generator.getContentSize() - 4, beforePreposition - generator.getContentSize());
+        }
+        if (accept(INC)) {
+            expect(LPAREN);
+            expect(IDENTIFIER);
+            Optional<ID> var = idTable.findVariable(last.getValue(), baseAndOffset);
+            if (var.isPresent()) {
+                generator.movEax(1L);
+                generator.changeEaxEbx();
+                generator.movEaxEdiPlusOffset(var.get().getValue());
+                generator.addEaxEbx();
+                generator.movEdiPlusOffsetEax(var.get().getValue());
+            } else {
+                error = true;
+                log.error(format("Variable \"{0}\" not declared at line {1}", last.getValue(), scanner.lineNumber()));
+            }
+            expect(RPAREN);
         }
         if (accept(READLN)) {
             log.debug("READLN");
@@ -263,6 +293,9 @@ public class Parser {
                 expect(RPAREN);
             }
             generator.writeNewLine();
+        }
+        if (accept(HALT)) {
+            generator.jmp(generator.distanceTo(0x300));
         }
     }
 
@@ -408,15 +441,21 @@ public class Parser {
 
     private void cons(BaseAndOffset baseAndOffset) {
         log.debug(scanner.toString());
+        boolean minus;
         while (true) {
             ID id = new ID();
             id.setType(IDType.CONST);
             expect(IDENTIFIER);
             id.setName(last.getValue());
             expect(EQ);
+            minus = accept(MINUS);
             expect(INTEGER);
             if (!error) {
-                id.setValue(last.getValue());
+                if (minus) {
+                    id.setValue("-" + last.getValue());
+                } else {
+                    id.setValue(last.getValue());
+                }
             }
             if (!idTable.addId(id, baseAndOffset)) {
                 error = true;

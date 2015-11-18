@@ -38,7 +38,7 @@ public class IDTable {
             return Optional.empty();
         List<ID> sublist = new ArrayList<>(ids).subList(from, to);
         Collections.reverse(sublist);
-        Predicate<ID> filterByNameAndType = item -> item.getName().equals(name) && item.getType() == type;
+        Predicate<ID> filterByNameAndType = item -> item.getName().toLowerCase().equals(name.toLowerCase()) && item.getType() == type;
         return sublist.stream().filter(filterByNameAndType).findFirst();
     }
 
@@ -53,7 +53,7 @@ public class IDTable {
             return Optional.empty();
         List<ID> sublist = new ArrayList<>(ids).subList(from, to);
         Collections.reverse(sublist);
-        Predicate<ID> filterByNameAndType = item -> item.getName().equals(name) && (item.getType() == VAR || item.getType() == CONST);
+        Predicate<ID> filterByNameAndType = item -> item.getName().toLowerCase().equals(name.toLowerCase()) && (item.getType() == VAR || item.getType() == CONST);
         return sublist.stream().filter(filterByNameAndType).findFirst();
     }
 

@@ -1,0 +1,12 @@
+const K2 = -2;
+var cant;
+begin
+    write ('Cuantos terminos de la sucesion de Lucas desea ver [minimo 3]? ');
+    readLn (cant);
+    if (cant > 20) then
+        begin
+            inc(cant)
+        end;
+    cant := cant + k2;
+    writeln (cant);
+end.

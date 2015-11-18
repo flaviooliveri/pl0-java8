@@ -1,0 +1,30 @@
+const k1 = 2, K2 = -1;
+var n1, n2, lu, cont, cant;
+
+procedure lucas;
+begin
+    lu := n1 + n2;
+    n1 := n2;
+    n2 := lu
+end;
+
+begin
+    write ('Cuantos terminos de la sucesion de Lucas desea ver [minimo 3]? ');
+    readLn (cant);
+    if (cant < 3) then
+        begin
+            writeln ('Cual parte de la pregunta no entendiste??? Minimo 3!!!');
+            halt
+        end;
+    writeln (k1, ' ', -k2, ' ');
+    N1 := K1;
+    n2 := -k2;
+    cont := 2;
+    repeat
+        writeLn ('lu: ', lu,', n1: ', n1,', n2: ', n2,', cant: ', cant,', cont: ', cont);
+        call lucas;
+        inc (cont);
+    until cont >= cant;
+    writeln (lu, ' ')
+    writeln
+end.
